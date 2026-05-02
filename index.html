@@ -3,321 +3,178 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WRGRAM</title>
+    <title>WRGRAM Cloud</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #17212b; color: white; }
-        .container { max-width: 500px; margin: 0 auto; padding: 20px; }
-        .screen { display: none; }
-        .screen.active { display: block; }
-        .card { background: #242f3d; border-radius: 16px; padding: 20px; margin: 20px 0; }
-        input, textarea, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 12px; border: none; background: #2b3947; color: white; font-size: 16px; }
-        button { background: #5288c1; color: white; border: none; padding: 12px 20px; border-radius: 12px; font-size: 16px; cursor: pointer; width: 100%; }
+        body { font-family: system-ui, sans-serif; background: #17212b; color: white; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .card { background: #242f3d; border-radius: 16px; padding: 20px; margin: 10px 0; }
+        input, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 12px; border: none; font-size: 16px; }
+        input { background: #2b3947; color: white; }
+        button { background: #5288c1; color: white; cursor: pointer; }
         .message { padding: 10px 15px; margin: 8px 0; border-radius: 18px; max-width: 80%; }
-        .message.outgoing { background: #5288c1; align-self: flex-end; margin-left: auto; }
+        .message.outgoing { background: #5288c1; margin-left: auto; }
         .message.incoming { background: #2b3947; }
-        .chat-list { height: 70vh; overflow-y: auto; padding: 10px; }
-        .message-container { display: flex; flex-direction: column; height: 60vh; overflow-y: auto; }
-        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
-        .tab { background: #2b3947; width: 50%; }
-        .tab.active { background: #5288c1; }
         .hidden { display: none; }
-        .avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
-        .header { display: flex; align-items: center; gap: 10px; padding: 10px; background: #242f3d; }
         .flex { display: flex; gap: 10px; align-items: center; }
-        .input-area { display: flex; gap: 10px; padding: 10px; background: #242f3d; position: fixed; bottom: 0; width: 100%; max-width: 500px; }
-        #msgInput { flex: 1; margin: 0; }
-        .theme-select { margin-top: 20px; }
+        .messages-container { height: 60vh; overflow-y: auto; padding: 10px; }
+        .input-area { display: flex; gap: 10px; position: fixed; bottom: 20px; left: 20px; right: 20px; max-width: 600px; margin: 0 auto; }
+        .input-area input { flex: 1; margin: 0; }
+        .input-area button { width: auto; padding: 12px 20px; }
     </style>
 </head>
 <body>
 <div class="container">
-    <!-- Экран авторизации -->
-    <div id="authScreen" class="screen active">
+    <div id="authScreen">
         <div class="card">
-            <h2>WRGRAM</h2>
-            <div class="tabs">
-                <button class="tab active" id="loginTab">Вход</button>
-                <button class="tab" id="registerTab">Регистрация</button>
+            <h2>WRGRAM ☁️</h2>
+            <div class="flex" style="margin: 15px 0;">
+                <button id="loginTabBtn" style="background:#5288c1">Вход</button>
+                <button id="registerTabBtn">Регистрация</button>
             </div>
             <div id="loginForm">
-                <input type="text" id="loginUsername" placeholder="Имя пользователя">
+                <input type="text" id="loginUsername" placeholder="Username">
                 <input type="password" id="loginPassword" placeholder="Пароль">
                 <button id="loginBtn">Войти</button>
             </div>
             <div id="registerForm" class="hidden">
-                <input type="text" id="regUsername" placeholder="Username (латиница)">
+                <input type="text" id="regUsername" placeholder="Username">
                 <input type="text" id="regDisplayName" placeholder="Отображаемое имя">
                 <input type="password" id="regPassword" placeholder="Пароль">
                 <button id="registerBtn">Зарегистрироваться</button>
             </div>
         </div>
     </div>
-
-    <!-- Главный экран -->
-    <div id="mainScreen" class="screen">
-        <div class="header">
-            <img id="myAvatar" class="avatar" src="">
-            <span id="myName"></span>
-            <button id="settingsBtn" style="width: auto; margin-left: auto;">⚙️</button>
-        </div>
-        
-        <div class="chat-list" id="chatsList">
-            <div class="card">Нет чатов</div>
-        </div>
-        
-        <div id="chatArea" class="hidden">
-            <div class="header" style="top: 0;">
-                <button id="backBtn" style="width: auto;">←</button>
-                <img id="chatAvatar" class="avatar" src="">
-                <span id="chatName"></span>
-                <button id="favBtn" style="width: auto; margin-left: auto;">⭐</button>
-            </div>
-            <div id="messagesContainer" class="message-container"></div>
-            <div class="input-area">
-                <textarea id="msgInput" rows="1" placeholder="Сообщение..."></textarea>
-                <button id="sendBtn" style="width: auto; padding: 12px;">➤</button>
-            </div>
-        </div>
-        
-        <!-- Панель настроек -->
-        <div id="settingsPanel" class="hidden card" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 100; overflow-y: auto;">
-            <h3>Настройки</h3>
+    
+    <div id="chatScreen" class="hidden">
+        <div class="card">
             <div class="flex">
-                <img id="settingsAvatar" class="avatar" style="width: 80px; height: 80px;">
-                <input type="file" id="avatarInput" accept="image/*">
+                <span id="userName"></span>
+                <button id="logoutBtn" style="margin-left:auto; background:#d32f2f;">Выйти</button>
             </div>
-            <input type="text" id="settingsDisplayName" placeholder="Отображаемое имя">
-            <textarea id="settingsBio" placeholder="О себе"></textarea>
-            <select id="themeSelect">
-                <option value="dark">Тёмная</option>
-                <option value="light">Светлая</option>
-                <option value="blue">Синяя</option>
-            </select>
-            <button id="saveSettingsBtn">Сохранить</button>
-            <button id="closeSettingsBtn" style="background: #555;">Закрыть</button>
-            <button id="logoutBtn" style="background: #d32f2f;">Выйти</button>
+        </div>
+        <div class="card">
+            <h3>Чаты</h3>
+            <div id="chatsContainer">
+                <button onclick="openChat('test', 'Тестовый собеседник')">Тестовый чат</button>
+            </div>
+        </div>
+        <div id="chatArea" class="hidden">
+            <div class="flex" style="margin-bottom:12px;">
+                <button id="backBtn" style="width:auto;">← Назад</button>
+                <span id="chatPartnerName"></span>
+            </div>
+            <div id="messagesContainer" class="messages-container"></div>
+            <div class="input-area">
+                <input type="text" id="msgInput" placeholder="Сообщение...">
+                <button id="sendBtn">→</button>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    // Временное хранилище (пока без бэкенда)
-    let currentUser = null;
-    let messages = JSON.parse(localStorage.getItem('msgs') || '{}');
-    let users = JSON.parse(localStorage.getItem('users') || '{}');
-    
-    // Переключение табов
-    document.getElementById('loginTab')?.addEventListener('click', () => {
-        document.getElementById('loginForm').classList.remove('hidden');
-        document.getElementById('registerForm').classList.add('hidden');
-        document.getElementById('loginTab').classList.add('active');
-        document.getElementById('registerTab').classList.remove('active');
+const API_URL = 'https://d5d2kuo8dn88fsigd340.kr8f6hld.apigw.yandexcloud.net';
+
+let currentUser = null;
+let currentChatId = null;
+
+// Регистрация
+document.getElementById('registerBtn').onclick = async () => {
+    const res = await fetch(`${API_URL}/auth`, {
+        method: 'POST',
+        body: JSON.stringify({
+            action: 'register',
+            username: document.getElementById('regUsername').value,
+            display_name: document.getElementById('regDisplayName').value,
+            password: document.getElementById('regPassword').value
+        })
     });
-    document.getElementById('registerTab')?.addEventListener('click', () => {
-        document.getElementById('loginForm').classList.add('hidden');
-        document.getElementById('registerForm').classList.remove('hidden');
-        document.getElementById('registerTab').classList.add('active');
-        document.getElementById('loginTab').classList.remove('active');
+    const data = await res.json();
+    alert(data.success ? 'Регистрация успешна! Войдите' : 'Ошибка: ' + JSON.stringify(data));
+};
+
+// Вход
+document.getElementById('loginBtn').onclick = async () => {
+    const res = await fetch(`${API_URL}/auth`, {
+        method: 'POST',
+        body: JSON.stringify({
+            action: 'login',
+            username: document.getElementById('loginUsername').value,
+            password: document.getElementById('loginPassword').value
+        })
     });
-    
-    // Регистрация
-    document.getElementById('registerBtn')?.addEventListener('click', () => {
-        const username = document.getElementById('regUsername').value.trim();
-        const displayName = document.getElementById('regDisplayName').value.trim();
-        const password = document.getElementById('regPassword').value;
-        
-        if (users[username]) {
-            alert('Пользователь существует');
-            return;
-        }
-        
-        const userId = Date.now().toString();
-        users[username] = { userId, username, displayName, password, avatar: '', bio: '' };
-        localStorage.setItem('users', JSON.stringify(users));
-        alert('Зарегистрирован! Теперь войдите');
-    });
-    
-    // Вход
-    document.getElementById('loginBtn')?.addEventListener('click', () => {
-        const username = document.getElementById('loginUsername').value.trim();
-        const password = document.getElementById('loginPassword').value;
-        const user = users[username];
-        
-        if (user && user.password === password) {
-            currentUser = user;
-            localStorage.setItem('currentUser', JSON.stringify(currentUser));
-            document.getElementById('authScreen').classList.remove('active');
-            document.getElementById('mainScreen').classList.add('active');
-            loadUI();
-        } else {
-            alert('Неверные данные');
-        }
-    });
-    
-    function loadUI() {
-        if (!currentUser) return;
-        document.getElementById('myName').innerText = currentUser.displayName;
-        applyTheme();
-        loadChats();
+    const data = await res.json();
+    if (data.success) {
+        currentUser = data;
+        document.getElementById('authScreen').classList.add('hidden');
+        document.getElementById('chatScreen').classList.remove('hidden');
+        document.getElementById('userName').innerText = data.display_name;
+    } else {
+        alert('Ошибка входа: ' + (data.error || 'неверные данные'));
     }
-    
-    function loadChats() {
-        const chatsDiv = document.getElementById('chatsList');
-        // Получаем уникальные чаты из сообщений
-        const myId = currentUser.userId;
-        const chatsSet = new Set();
-        Object.values(messages).forEach(msg => {
-            if (msg.senderId === myId) chatsSet.add(msg.toId);
-            if (msg.toId === myId) chatsSet.add(msg.senderId);
-        });
-        
-        if (chatsSet.size === 0) {
-            chatsDiv.innerHTML = '<div class="card">Нет чатов. Начните диалог!</div>';
-            return;
-        }
-        
-        let html = '';
-        for (let userId of chatsSet) {
-            const user = Object.values(users).find(u => u.userId === userId);
-            if (user) {
-                html += `<div class="card" onclick="openChat('${userId}')" style="margin: 10px 0; display: flex; gap: 10px; align-items: center;">
-                            <img src="${user.avatar || 'https://via.placeholder.com/40'}" class="avatar">
-                            <div><strong>${user.displayName}</strong><br><small>@${user.username}</small></div>
-                         </div>`;
-            }
-        }
-        chatsDiv.innerHTML = html;
+};
+
+// Открыть чат
+window.openChat = (chatId, name) => {
+    currentChatId = chatId;
+    document.querySelector('#chatScreen > .card').classList.add('hidden');
+    document.getElementById('chatArea').classList.remove('hidden');
+    document.getElementById('chatPartnerName').innerText = name;
+    loadMessages();
+};
+
+// Загрузка сообщений
+async function loadMessages() {
+    const res = await fetch(`${API_URL}/get?chat_id=${currentChatId}`);
+    const data = await res.json();
+    const container = document.getElementById('messagesContainer');
+    if (data.messages) {
+        container.innerHTML = data.messages.map(m => `
+            <div class="message ${m.sender_id === currentUser?.user_id ? 'outgoing' : 'incoming'}">
+                ${m.text}
+            </div>
+        `).join('');
     }
-    
-    window.openChat = function(toUserId) {
-        const toUser = Object.values(users).find(u => u.userId === toUserId);
-        if (!toUser) return;
-        
-        document.getElementById('chatsList').classList.add('hidden');
-        document.getElementById('chatArea').classList.remove('hidden');
-        document.getElementById('chatName').innerText = toUser.displayName;
-        document.getElementById('chatAvatar').src = toUser.avatar || 'https://via.placeholder.com/40';
-        window.currentChat = toUserId;
-        loadMessages(toUserId);
-    };
-    
-    function loadMessages(toUserId) {
-        const container = document.getElementById('messagesContainer');
-        const myId = currentUser.userId;
-        const chatMessages = Object.values(messages).filter(m => 
-            (m.senderId === myId && m.toId === toUserId) || 
-            (m.senderId === toUserId && m.toId === myId)
-        ).sort((a,b) => a.timestamp - b.timestamp);
-        
-        let html = '';
-        chatMessages.forEach(msg => {
-            const isOutgoing = msg.senderId === myId;
-            html += `<div class="message ${isOutgoing ? 'outgoing' : 'incoming'}">
-                        <div>${msg.text}</div>
-                        <small>${new Date(msg.timestamp).toLocaleTimeString()}</small>
-                     </div>`;
-        });
-        container.innerHTML = html;
-        container.scrollTop = container.scrollHeight;
-    }
-    
-    document.getElementById('sendBtn')?.addEventListener('click', () => {
-        const text = document.getElementById('msgInput').value.trim();
-        if (!text || !window.currentChat) return;
-        
-        const msgId = Date.now().toString();
-        messages[msgId] = {
-            id: msgId,
-            text: text,
-            senderId: currentUser.userId,
-            toId: window.currentChat,
-            timestamp: Date.now()
-        };
-        localStorage.setItem('msgs', JSON.stringify(messages));
-        document.getElementById('msgInput').value = '';
-        loadMessages(window.currentChat);
-        loadChats(); // обновить список чатов
+}
+
+// Отправка
+document.getElementById('sendBtn').onclick = async () => {
+    const text = document.getElementById('msgInput').value;
+    if (!text || !currentChatId) return;
+    await fetch(`${API_URL}/send`, {
+        method: 'POST',
+        body: JSON.stringify({
+            chat_id: currentChatId,
+            sender_id: currentUser.user_id,
+            text: text
+        })
     });
-    
-    document.getElementById('backBtn')?.addEventListener('click', () => {
-        document.getElementById('chatsList').classList.remove('hidden');
-        document.getElementById('chatArea').classList.add('hidden');
-    });
-    
-    // Настройки
-    document.getElementById('settingsBtn')?.addEventListener('click', () => {
-        document.getElementById('settingsPanel').classList.remove('hidden');
-        document.getElementById('settingsDisplayName').value = currentUser.displayName;
-        document.getElementById('settingsBio').value = currentUser.bio || '';
-        document.getElementById('settingsAvatar').src = currentUser.avatar || 'https://via.placeholder.com/80';
-        document.getElementById('themeSelect').value = localStorage.getItem('theme') || 'dark';
-    });
-    
-    document.getElementById('closeSettingsBtn')?.addEventListener('click', () => {
-        document.getElementById('settingsPanel').classList.add('hidden');
-    });
-    
-    document.getElementById('saveSettingsBtn')?.addEventListener('click', () => {
-        currentUser.displayName = document.getElementById('settingsDisplayName').value;
-        currentUser.bio = document.getElementById('settingsBio').value;
-        const newTheme = document.getElementById('themeSelect').value;
-        localStorage.setItem('theme', newTheme);
-        users[currentUser.username] = currentUser;
-        localStorage.setItem('users', JSON.stringify(users));
-        localStorage.setItem('currentUser', JSON.stringify(currentUser));
-        applyTheme();
-        document.getElementById('settingsPanel').classList.add('hidden');
-        loadUI();
-    });
-    
-    document.getElementById('avatarInput')?.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                currentUser.avatar = ev.target.result;
-                users[currentUser.username] = currentUser;
-                localStorage.setItem('users', JSON.stringify(users));
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                document.getElementById('settingsAvatar').src = ev.target.result;
-                loadUI();
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-    
-    document.getElementById('logoutBtn')?.addEventListener('click', () => {
-        localStorage.removeItem('currentUser');
-        currentUser = null;
-        document.getElementById('authScreen').classList.add('active');
-        document.getElementById('mainScreen').classList.remove('active');
-    });
-    
-    function applyTheme() {
-        const theme = localStorage.getItem('theme') || 'dark';
-        const body = document.body;
-        if (theme === 'dark') {
-            body.style.background = '#17212b';
-            body.style.color = 'white';
-        } else if (theme === 'light') {
-            body.style.background = '#f0f0f0';
-            body.style.color = 'black';
-            document.querySelectorAll('.card').forEach(c => c.style.background = 'white');
-        } else if (theme === 'blue') {
-            body.style.background = '#1e3a5f';
-            body.style.color = 'white';
-        }
-    }
-    
-    // Восстановление сессии
-    const savedUser = localStorage.getItem('currentUser');
-    if (savedUser) {
-        currentUser = JSON.parse(savedUser);
-        document.getElementById('authScreen').classList.remove('active');
-        document.getElementById('mainScreen').classList.add('active');
-        loadUI();
-    }
+    document.getElementById('msgInput').value = '';
+    loadMessages();
+};
+
+// Назад
+document.getElementById('backBtn').onclick = () => {
+    document.querySelector('#chatScreen > .card').classList.remove('hidden');
+    document.getElementById('chatArea').classList.add('hidden');
+};
+
+// Выход
+document.getElementById('logoutBtn').onclick = () => {
+    localStorage.clear();
+    location.reload();
+};
+
+// Переключение табов
+document.getElementById('loginTabBtn').onclick = () => {
+    document.getElementById('loginForm').classList.remove('hidden');
+    document.getElementById('registerForm').classList.add('hidden');
+};
+document.getElementById('registerTabBtn').onclick = () => {
+    document.getElementById('loginForm').classList.add('hidden');
+    document.getElementById('registerForm').classList.remove('hidden');
+};
 </script>
 </body>
 </html>
