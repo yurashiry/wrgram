@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WRGRAM Cloud</title>
+    <title>WRGRAM</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: system-ui, sans-serif; background: #17212b; color: white; padding: 20px; }
@@ -21,6 +21,7 @@
         .input-area { display: flex; gap: 10px; position: fixed; bottom: 20px; left: 20px; right: 20px; max-width: 600px; margin: 0 auto; }
         .input-area input { flex: 1; margin: 0; }
         .input-area button { width: auto; padding: 12px 20px; }
+        .error { color: #ff6b6b; font-size: 14px; margin: 10px 0; }
     </style>
 </head>
 <body>
@@ -36,12 +37,14 @@
                 <input type="text" id="loginUsername" placeholder="Username">
                 <input type="password" id="loginPassword" placeholder="Пароль">
                 <button id="loginBtn">Войти</button>
+                <div id="loginError" class="error"></div>
             </div>
             <div id="registerForm" class="hidden">
                 <input type="text" id="regUsername" placeholder="Username">
                 <input type="text" id="regDisplayName" placeholder="Отображаемое имя">
                 <input type="password" id="regPassword" placeholder="Пароль">
                 <button id="registerBtn">Зарегистрироваться</button>
+                <div id="registerError" class="error"></div>
             </div>
         </div>
     </div>
@@ -56,7 +59,7 @@
         <div class="card">
             <h3>Чаты</h3>
             <div id="chatsContainer">
-                <button onclick="openChat('test', 'Тестовый собеседник')">Тестовый чат</button>
+                <button onclick="openChat('test', 'Тестовый собеседник')">📩 Тестовый чат</button>
             </div>
         </div>
         <div id="chatArea" class="hidden">
@@ -81,37 +84,75 @@ let currentChatId = null;
 
 // Регистрация
 document.getElementById('registerBtn').onclick = async () => {
-    const res = await fetch(`${API_URL}/auth`, {
-        method: 'POST',
-        body: JSON.stringify({
-            action: 'register',
-            username: document.getElementById('regUsername').value,
-            display_name: document.getElementById('regDisplayName').value,
-            password: document.getElementById('regPassword').value
-        })
-    });
-    const data = await res.json();
-    alert(data.success ? 'Регистрация успешна! Войдите' : 'Ошибка: ' + JSON.stringify(data));
+    const username = document.getElementById('regUsername').value;
+    const displayName = document.getElementById('regDisplayName').value;
+    const password = document.getElementById('regPassword').value;
+    
+    const errorDiv = document.getElementById('registerError');
+    errorDiv.textContent = 'Отправка...';
+    
+    try {
+        const res = await fetch(`${API_URL}/auth`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                action: 'register',
+                username: username,
+                display_name: displayName,
+                password: password
+            })
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+            errorDiv.style.color = '#4caf50';
+            errorDiv.textContent = '✅ Регистрация успешна! Теперь войдите.';
+            document.getElementById('regUsername').value = '';
+            document.getElementById('regDisplayName').value = '';
+            document.getElementById('regPassword').value = '';
+        } else {
+            errorDiv.style.color = '#ff6b6b';
+            errorDiv.textContent = '❌ Ошибка: ' + JSON.stringify(data);
+        }
+    } catch (err) {
+        errorDiv.style.color = '#ff6b6b';
+        errorDiv.textContent = '❌ Ошибка соединения: ' + err.message;
+    }
 };
 
 // Вход
 document.getElementById('loginBtn').onclick = async () => {
-    const res = await fetch(`${API_URL}/auth`, {
-        method: 'POST',
-        body: JSON.stringify({
-            action: 'login',
-            username: document.getElementById('loginUsername').value,
-            password: document.getElementById('loginPassword').value
-        })
-    });
-    const data = await res.json();
-    if (data.success) {
-        currentUser = data;
-        document.getElementById('authScreen').classList.add('hidden');
-        document.getElementById('chatScreen').classList.remove('hidden');
-        document.getElementById('userName').innerText = data.display_name;
-    } else {
-        alert('Ошибка входа: ' + (data.error || 'неверные данные'));
+    const username = document.getElementById('loginUsername').value;
+    const password = document.getElementById('loginPassword').value;
+    
+    const errorDiv = document.getElementById('loginError');
+    errorDiv.textContent = 'Отправка...';
+    
+    try {
+        const res = await fetch(`${API_URL}/auth`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                action: 'login',
+                username: username,
+                password: password
+            })
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+            currentUser = data;
+            document.getElementById('authScreen').classList.add('hidden');
+            document.getElementById('chatScreen').classList.remove('hidden');
+            document.getElementById('userName').innerText = data.display_name || data.username;
+            errorDiv.textContent = '';
+        } else {
+            errorDiv.style.color = '#ff6b6b';
+            errorDiv.textContent = '❌ Ошибка входа: ' + (data.error || 'неверные данные');
+        }
+    } catch (err) {
+        errorDiv.style.color = '#ff6b6b';
+        errorDiv.textContent = '❌ Ошибка соединения: ' + err.message;
     }
 };
 
@@ -126,15 +167,20 @@ window.openChat = (chatId, name) => {
 
 // Загрузка сообщений
 async function loadMessages() {
-    const res = await fetch(`${API_URL}/get?chat_id=${currentChatId}`);
-    const data = await res.json();
-    const container = document.getElementById('messagesContainer');
-    if (data.messages) {
-        container.innerHTML = data.messages.map(m => `
-            <div class="message ${m.sender_id === currentUser?.user_id ? 'outgoing' : 'incoming'}">
-                ${m.text}
-            </div>
-        `).join('');
+    try {
+        const res = await fetch(`${API_URL}/get?chat_id=${currentChatId}`);
+        const data = await res.json();
+        const container = document.getElementById('messagesContainer');
+        if (data.messages) {
+            container.innerHTML = data.messages.map(m => `
+                <div class="message ${m.sender_id === currentUser?.user_id ? 'outgoing' : 'incoming'}">
+                    ${m.text}
+                    <div style="font-size:10px; opacity:0.6;">${new Date(m.created_at * 1000).toLocaleTimeString()}</div>
+                </div>
+            `).join('');
+        }
+    } catch (err) {
+        console.error('load error', err);
     }
 }
 
@@ -142,16 +188,22 @@ async function loadMessages() {
 document.getElementById('sendBtn').onclick = async () => {
     const text = document.getElementById('msgInput').value;
     if (!text || !currentChatId) return;
-    await fetch(`${API_URL}/send`, {
-        method: 'POST',
-        body: JSON.stringify({
-            chat_id: currentChatId,
-            sender_id: currentUser.user_id,
-            text: text
-        })
-    });
-    document.getElementById('msgInput').value = '';
-    loadMessages();
+    
+    try {
+        await fetch(`${API_URL}/send`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                chat_id: currentChatId,
+                sender_id: currentUser?.user_id,
+                text: text
+            })
+        });
+        document.getElementById('msgInput').value = '';
+        loadMessages();
+    } catch (err) {
+        console.error('send error', err);
+    }
 };
 
 // Назад
