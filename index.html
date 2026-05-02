@@ -77,7 +77,10 @@
 </div>
 
 <script>
-const API_URL = 'https://d5d2kuo8dn88fsigd340.kr8f6hld.apigw.yandexcloud.net';
+<script>
+// Используем CORS-прокси (временное решение)
+const API_URL = 'https://cors-anywhere.herokuapp.com/https://d5d2kuo8dn88fsigd340.kr8f6hld.apigw.yandexcloud.net';
+    const API_URL = 'https://d5d2kuo8dn88fsigd340.kr8f6hld.apigw.yandexcloud.net';
 
 let currentUser = null;
 let currentChatId = null;
